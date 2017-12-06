@@ -2,7 +2,7 @@ apply plugin: 'com.dd.comgradle'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "26"
     defaultConfig {
         applicationId "com.mrzhang.androidcomponent"
         minSdkVersion 15
@@ -32,4 +32,5 @@ combuild {
     applicationName = 'com.mrzhang.component.application.AppApplication'
     isRegisterCompoAuto = true
 }
+
 

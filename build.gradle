@@ -25,4 +25,12 @@ allprojects {
             url uri('./repo')
         }
     }
+
+
+
+
+}
+
+task hello1 << {
+    println 'hello nicewarm'
 }
