@@ -12,16 +12,12 @@ public class ComBuild implements Plugin<Project> {
 
     void apply(Project project) {
         project.extensions.create('combuild', ComExtension)
-
         String taskNames = project.gradle.startParameter.taskNames.toString()
-        System.out.println("taskNames is " + taskNames);
         String module = project.path.replace(":", "")
-        System.out.println("current module is " + module);
         AssembleTask assembleTask = getTaskInfo(project.gradle.startParameter.taskNames)
 
-        if (assembleTask.isAssemble) {
+        if (assembleTask.isAssemble) {//是否是组装task
             fetchMainmodulename(project, assembleTask);
-            System.out.println("compilemodule  is " + compilemodule);
         }
 
         if (!project.hasProperty("isRunAlone")) {
@@ -43,6 +39,9 @@ public class ComBuild implements Plugin<Project> {
         }
         project.setProperty("isRunAlone", isRunAlone)
 
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  taskNames is " + taskNames+" ， current module is = "+module+" ， isRunAlone is = " + isRunAlone+" ， compilemodule  is = " + compilemodule+" ， mainmodulename = "+mainmodulename);
+
+
         //根据配置添加各种组件依赖，并且自动化生成组件加载代码
         if (isRunAlone) {
             project.apply plugin: 'com.android.application'
@@ -55,14 +54,14 @@ public class ComBuild implements Plugin<Project> {
                     }
                 }
             }
-            System.out.println("apply plugin is " + 'com.android.application');
+            System.out.println("==========================apply plugin is " + 'com.android.application');
             if (assembleTask.isAssemble && module.equals(compilemodule)) {
                 compileComponents(assembleTask, project)
                 project.android.registerTransform(new ComCodeTransform(project))
             }
         } else {
             project.apply plugin: 'com.android.library'
-            System.out.println("apply plugin is " + 'com.android.library');
+            System.out.println("==========================apply plugin is " + 'com.android.library');
             project.afterEvaluate {
                 Task assembleReleaseTask = project.tasks.findByPath("assembleRelease")
                 if (assembleReleaseTask != null) {
@@ -77,7 +76,7 @@ public class ComBuild implements Plugin<Project> {
                                 String fileName -> desFile.name
                             }
                         }
-                        System.out.println("$module-release.aar copy success ");
+                        System.out.println("========================== $module-release.aar copy success ");
                     }
                 }
             }
@@ -96,6 +95,13 @@ public class ComBuild implements Plugin<Project> {
         if (!project.rootProject.hasProperty("mainmodulename")) {
             throw new RuntimeException("you should set compilemodule in rootproject's gradle.properties")
         }
+        System.out.println("========================== assembleTask.modules.size() = "+assembleTask.modules.size());
+        if (assembleTask.modules.size()>0){
+            System.out.println("========================== assembleTask.modules.get(0)="+assembleTask.modules.get(0));
+        }
+
+
+
         if (assembleTask.modules.size() > 0 && assembleTask.modules.get(0) != null
                 && assembleTask.modules.get(0).trim().length() > 0
                 && !assembleTask.modules.get(0).equals("all")) {
@@ -115,8 +121,11 @@ public class ComBuild implements Plugin<Project> {
                 if (task.toUpperCase().contains("DEBUG")) {
                     assembleTask.isDebug = true;
                 }
+                //是否是组装task
                 assembleTask.isAssemble = true;
                 String[] strs = task.split(":")
+                System.out.println("************** task =  "+task);
+
                 assembleTask.modules.add(strs.length > 1 ? strs[strs.length - 2] : "all");
                 break;
             }
@@ -139,27 +148,27 @@ public class ComBuild implements Plugin<Project> {
         }
 
         if (components == null || components.length() == 0) {
-            System.out.println("there is no add dependencies ");
+            System.out.println("==========================there is no add dependencies ");
             return;
         }
         String[] compileComponents = components.split(",")
         if (compileComponents == null || compileComponents.length == 0) {
-            System.out.println("there is no add dependencies ");
+            System.out.println("==========================there is no add dependencies ");
             return;
         }
         for (String str : compileComponents) {
-            System.out.println("comp is " + str);
+            System.out.println("==========================comp is " + str);
             if (str.contains(":")) {
                 File file = project.file("../componentrelease/" + str.split(":")[1] + "-release.aar")
                 if (file.exists()) {
                     project.dependencies.add("compile", str + "-release@aar")
-                    System.out.println("add dependencies : " + str + "-release@aar");
+                    System.out.println("==========================add dependencies : " + str + "-release@aar");
                 } else {
                     throw new RuntimeException(str + " not found ! maybe you should generate a new one ")
                 }
             } else {
                 project.dependencies.add("compile", project.project(':' + str))
-                System.out.println("add dependencies project : " + str);
+                System.out.println("==========================add dependencies project : " + str);
             }
         }
     }
